@@ -317,6 +317,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
 .music-btn:hover { color: var(--text); }
 .music-btn.active { color: var(--accent); }
 .music-progress { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; cursor: pointer; max-width: 200px; }.music-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s linear; }
+.music-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s linear; }
 .music-vol { width: 60px; height: 3px; background: var(--bg3); border-radius: 99px; cursor: pointer; }
 .music-vol-fill { height: 100%; background: var(--muted); border-radius: 99px; }
 
@@ -326,3 +327,332 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
 .track-list { display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto; }
 .track-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s; }
 .track-item:hover { background: var(--bg3); }
+.track-item.playing { background: rgba(192,132,252,0.1); }
+.track-num { font-size: 12px; color: var(--muted); width: 20px; text-align: center; }
+.track-thumb { width: 44px; height: 44px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.track-info { flex: 1; min-width: 0; }
+.track-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-artist { font-size: 12px; color: var(--muted); }
+.track-duration { font-size: 12px; color: var(--muted); }
+.track-play-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px; }
+.track-play-btn:hover { color: var(--accent); }
+.genre-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 4px; }
+.genre-tab { flex-shrink: 0; padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: var(--font-body); }
+.genre-tab:hover { color: var(--text); }
+.genre-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+.post-music-tag { display: flex; align-items: center; gap: 8px; background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.2); border-radius: 10px; padding: 8px 12px; margin-top: 10px; }
+.post-music-tag .note { font-size: 16px; }
+.post-music-tag .info { flex: 1; }
+.post-music-tag .name { font-size: 13px; font-weight: 500; }
+.post-music-tag .artist { font-size: 11px; color: var(--muted); }
+.post-music-tag .remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+
+  @media (max-width: 768px) {
+  .music-bar { left: 0; right: 0; bottom: 60px; }
+  .music-progress { max-width: 100px; }
+  .music-vol { display: none; }
+}
+ 
+.hidden { display: none !important; }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+<body>
+ 
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen" style="display:flex">
+  <div class="auth-card">
+    <div class="auth-logo">vybe</div>
+    <div class="auth-sub">it's ur vibe ✨</div>
+    <div id="auth-error" class="auth-error hidden"></div>
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="login-email" type="email" placeholder="you@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-pass" type="password" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px" onclick="doLogin()">Log in</button>
+      <div class="auth-switch">Don't have an account? <a onclick="showSignup()">Sign up</a></div>
+    </div>
+    <div id="signup-form" class="hidden">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="signup-username" type="text" placeholder="yourvybe"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="signup-email" type="email" placeholder="you@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="signup-pass" type="password" placeholder="••••••••"/>
+        </div>
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <input class="form-input" id="signup-dob" type="date"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Must be under 16 to join vybe</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px" onclick="doSignup()">Create account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showLogin()">Log in</a></div>
+    </div>
+  </div>
+</div>
+
+  <!-- MAIN APP -->
+<div id="app" style="display:none">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="logo">
+      <div class="logo-text">vybe</div>
+      <div class="logo-sub">it's ur vibe ✨</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('home',this)"><span class="nav-icon">🏠</span> Home</div>
+      <div class="nav-item" onclick="showPage('reels',this)"><span class="nav-icon">🎬</span> Reels</div>
+      <div class="nav-item" onclick="showPage('dms',this)"><span class="nav-icon">💬</span> Messages <span class="nav-badge" id="dm-badge">2</span></div>
+      <div class="nav-item" onclick="showPage('profile',this)"><span class="nav-icon">👤</span> Profile</div>
+      <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span> Settings</div>
+      <div class="nav-item" onclick="openMusicModal()"><span class="nav-icon">🎵</span> Music</div>
+    </nav>
+    <div class="user-area" onclick="showPage('profile',null)">
+      <div class="avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div class="user-name" id="sidebar-username">Loading...</div>
+        <div class="user-handle" id="sidebar-handle">@...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div class="page-title" id="page-title">Home</div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-icon" onclick="showNewPostModal()" title="New post">✏️</button>
+        <button class="btn btn-ghost btn-icon" onclick="showPage('dms',null)" title="Messages">💬</button>
+        <button class="btn btn-ghost btn-icon" onclick="doLogout()" title="Logout">🚪</button>
+      </div>
+    </div>
+    <div id="content">
+
+      <!-- HOME PAGE -->
+      <div id="page-home" class="page active">
+        <div class="feed">
+          <!-- STORIES -->
+          <div class="stories-row" id="stories-row">
+            <div class="story-item" onclick="showNewStoryModal()">
+              <div class="story-ring add-story">➕</div>
+              <div class="story-name">Your story</div>
+            </div>
+          </div>
+          <!-- POSTS will be injected here -->
+          <div id="posts-container"></div>
+          <div id="posts-loading" style="text-align:center;color:var(--muted);padding:20px">Loading posts...</div>
+        </div>
+      </div>
+ 
+      <!-- REELS PAGE -->
+      <div id="page-reels" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-family:var(--font-head);font-size:22px;font-weight:700">Reels</div>
+          <button class="btn btn-primary" onclick="showNewReelModal()">+ New Reel</button>
+        </div>
+        <div class="reels-grid" id="reels-grid"></div>
+        <div id="reels-loading" style="text-align:center;color:var(--muted);padding:20px">Loading reels...</div>
+        </div>
+
+      <!-- DMS PAGE -->
+      <div id="page-dms" class="page">
+        <div class="dm-layout" style="height:calc(100vh - 108px)">
+          <div class="dm-list">
+            <div class="dm-list-header">Messages</div>
+            <div id="dm-list-items"></div>
+            <div style="padding:16px">
+              <button class="btn btn-primary" style="width:100%" onclick="showNewDMModal()">+ New Message</button>
+            </div>
+          </div>
+          <div class="dm-chat" id="dm-chat">
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px">Select a conversation</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE PAGE -->
+      <div id="page-profile" class="page">
+        <div class="profile-header">
+          <div class="profile-top">
+            <div class="profile-avatar" id="profile-avatar-display" onclick="triggerAvatarUpload()">?
+              <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)"/>
+            </div>
+            <div class="profile-stats">
+              <div class="stat"><div class="stat-num" id="profile-post-count">0</div><div class="stat-label">posts</div></div>
+              <div class="stat"><div class="stat-num" id="profile-follower-count">0</div><div class="stat-label">followers</div></div>
+              <div class="stat"><div class="stat-num" id="profile-following-count">0</div><div class="stat-label">following</div></div>
+              </div>
+          </div>
+          <div class="profile-name" id="profile-display-name">Your Name</div>
+          <div class="profile-bio" id="profile-bio-text">Tap to add a bio...</div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-ghost" onclick="showEditProfileModal()">Edit profile</button>
+            <button class="btn btn-ghost" onclick="showPage('settings',null)">⚙️</button>
+          </div>
+        </div>
+        <div class="profile-grid" id="profile-grid"></div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="page-settings" class="page">
+        <div class="settings-section">
+          <div class="settings-title">🎨 Theme</div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Colour theme</div>
+              <div class="setting-desc">Pick your vybe's colours</div>
+            </div>
+          </div>
+          <div class="theme-grid">
+            <div class="theme-dot selected" style="background:linear-gradient(135deg,#c084fc,#f472b6)" data-theme="default" onclick="setTheme('default',this)" title="Purple">✓</div>
+            <div class="theme-dot" style="background:linear-gradient(135deg,#38bdf8,#34d399)" data-theme="ocean" onclick="setTheme('ocean',this)" title="Ocean"></div>
+            <div class="theme-dot" style="background:linear-gradient(135deg,#fb923c,#f472b6)" data-theme="sunset" onclick="setTheme('sunset',this)" title="Sunset"></div>
+            <div class="theme-dot" style="background:linear-gradient(135deg,#4ade80,#34d399)" data-theme="forest" onclick="setTheme('forest',this)" title="Forest"></div>
+            <div class="theme-dot" style="background:linear-gradient(135deg,#f472b6,#a78bfa)" data-theme="candy" onclick="setTheme('candy',this)" title="Candy"></div>
+          </div>
+          <div class="setting-row" style="margin-top:12px">
+            <div class="setting-label">Light mode</div>
+            <label class="toggle"><input type="checkbox" id="light-mode-toggle" onchange="toggleLightMode(this)"/><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">👤 Account</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Username</div><div class="setting-desc" id="settings-username">@...</div></div>
+            <button class="btn btn-ghost" onclick="showEditProfileModal()">Edit</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Sign out</div>
+            <button class="btn btn-ghost" onclick="doLogout()">Sign out</button>
+            </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">🔒 Privacy</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Private account</div><div class="setting-desc">Only approved followers see your posts</div></div>
+            <label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Allow DMs from</div></div>
+            <select><option>Everyone</option><option>Followers only</option><option>Nobody</option></select>
+          </div>
+        </div>
+      </div>
+
+     </div><!-- /content -->
+  </div><!-- /main -->
+ 
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div class="panel-section">
+      <div class="panel-title">Suggested for you</div>
+      <div id="suggested-users"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Trending stickers</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:24px" id="trending-stickers">
+        🔥💫✨🌊🎵🌸🦋🌙⚡🎨
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav">
+    <div class="mobile-nav-items">
+      <div class="mobile-nav-item active" onclick="showPage('home',this)"><div class="mobile-nav-icon">🏠</div>Home</div>
+      <div class="mobile-nav-item" onclick="showPage('reels',this)"><div class="mobile-nav-icon">🎬</div>Reels</div>
+      <div class="mobile-nav-item" onclick="showNewPostModal()"><div class="mobile-nav-icon" style="font-size:28px;color:var(--accent)">➕</div></div>
+      <div class="mobile-nav-item" onclick="showPage('dms',this)"><div class="mobile-nav-icon">💬</div>DMs</div>
+      <div class="mobile-nav-item" onclick="showPage('profile',this)"><div class="mobile-nav-icon">👤</div>Me</div>
+    </div>
+  </div>
+
+  <!-- MUSIC BAR -->
+  <div id="music-bar" class="music-bar hidden">
+    <div class="music-thumb" id="music-thumb">🎵</div>
+    <div class="music-info">
+      <div class="music-title" id="music-title">No track playing</div>
+      <div class="music-artist" id="music-artist">Pick a song 🎵</div>
+    </div>
+    <div class="music-progress" onclick="seekMusic(event)">
+      <div class="music-progress-fill" id="music-progress-fill" style="width:0%"></div>
+    </div>
+    <div class="music-controls">
+      <button class="music-btn" onclick="prevTrack()">⏮</button>
+      <button class="music-btn" id="play-pause-btn" onclick="togglePlayPause()">▶️</button>
+      <button class="music-btn" onclick="nextTrack()">⏭</button>
+      <button class="music-btn" onclick="openMusicModal()">🎵</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- MODALS -->
+
+  <!-- NEW POST MODAL -->
+<div id="modal-new-post" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Post</div>
+      <button class="modal-close" onclick="closeModal('modal-new-post')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" onclick="document.getElementById('post-file').click()">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">Tap to add a photo or video</div>
+        <input type="file" id="post-file" accept="image/*,video/*" style="display:none" onchange="handlePostFile(this)"/>
+        </div>
+      <div id="post-preview-wrap" class="hidden">
+        <div class="upload-preview" id="post-preview"></div>
+        <div class="filter-selector" id="filter-selector">
+          <div class="filter-opt selected" data-filter="" onclick="selectFilter(this,'')">
+            <div class="filter-thumb">None</div>
+          </div>
+          <div class="filter-opt" data-filter="clarendon" onclick="selectFilter(this,'clarendon')">
+            <div class="filter-thumb" style="background:rgba(127,187,227,0.3)">Clarendon</div>
+          </div>
+          <div class="filter-opt" data-filter="moon" onclick="selectFilter(this,'moon')">
+            <div class="filter-thumb" style="filter:grayscale(1)">Moon</div>
+          </div>
+          <div class="filter-opt" data-filter="lark" onclick="selectFilter(this,'lark')">
+            <div class="filter-thumb" style="filter:brightness(1.1)">Lark</div>
+          </div>
+          <div class="filter-opt" data-filter="reyes" onclick="selectFilter(this,'reyes')">
+            <div class="filter-thumb" style="filter:sepia(0.3)">Reyes</div>
+          </div>
+        </div>
+      </div>
+      <textarea class="create-input" id="post-caption" placeholder="Write a caption..." style="margin-top:12px;min-height:80px"></textarea>
+      <div class="tag-input-wrap" id="tag-wrap">
+        <div id="tags-display"></div>
+        <input class="tag-input" id="tag-input" placeholder="Tag someone (@username)" onkeydown="handleTagInput(event)"/>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Add stickers</div>
+        <div class="sticker-grid" id="sticker-grid-post">
+          🔥💫✨🌊🎵🌸🦋🌙⚡🎨🎃🎄🎆🎇🧨🎉🎊🎋🎍🎎🎏🎐🎑🎀🎁🎗🎟🎫🏆🥇
+          .split('').map — will be rendered by JS
+        </div>
+      </div>
+      <div id="selected-stickers-display" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;min-height:20px"></div>
+      <div id="post-music-display"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
+        <button class="btn btn-ghost" onclick="openMusicPickerForPost()">🎵 Add Music</button>
+        <button class="btn btn-ghost" onclick="closeModal('modal-new-post')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitPost()">Post ✨</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
