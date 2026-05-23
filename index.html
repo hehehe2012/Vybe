@@ -655,4 +655,317 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
+  <!-- NEW STORY MODAL -->
+<div id="modal-new-story" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Story</div>
+      <button class="modal-close" onclick="closeModal('modal-new-story')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" onclick="document.getElementById('story-file').click()">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Tap to add a photo or video (disappears in 24hrs)</div>
+        <input type="file" id="story-file" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"/>
+        </div>
+      <div id="story-preview-wrap" class="hidden">
+        <div class="upload-preview" id="story-preview"></div>
+      </div>
+      <textarea class="create-input" id="story-text" placeholder="Add text to your story..." style="margin-top:12px;min-height:60px"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-new-story')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitStory()">Share Story 📖</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- NEW REEL MODAL -->
+<div id="modal-new-reel" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Reel</div>
+      <button class="modal-close" onclick="closeModal('modal-new-reel')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" onclick="document.getElementById('reel-file').click()">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-text">Upload a video for your reel</div>
+        <input type="file" id="reel-file" accept="video/*" style="display:none" onchange="handleReelFile(this)"/>
+      </div>
+      <div id="reel-preview-wrap" class="hidden">
+        <div class="upload-preview" id="reel-preview"></div>
+        </div>
+      <textarea class="create-input" id="reel-caption" placeholder="Caption your reel..." style="margin-top:12px;min-height:60px"></textarea>
+      <div class="tag-input-wrap" id="reel-tag-wrap">
+        <div id="reel-tags-display"></div>
+        <input class="tag-input" id="reel-tag-input" placeholder="Tag someone (@username)" onkeydown="handleReelTagInput(event)"/>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-new-reel')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReel()">Post Reel 🎬</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- NEW DM MODAL -->
+<div id="modal-new-dm" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Message</div>
+      <button class="modal-close" onclick="closeModal('modal-new-dm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="form-input" id="dm-to-input" placeholder="Enter username to message..."/>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-new-dm')">Cancel</button>
+        <button class="btn btn-primary" onclick="startNewDM()">Start Chat 💬</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- MUSIC MODAL -->
+<div id="modal-music" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🎵 Music</div>
+      <button class="modal-close" onclick="closeModal('modal-music')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="music-search-input" id="music-search" placeholder="Search songs, artists..." oninput="filterTracks(this.value)"/>
+      <div class="genre-tabs" id="genre-tabs">
+        <button class="genre-tab active" onclick="filterGenre('all',this)">All</button>
+        <button class="genre-tab" onclick="filterGenre('pop',this)">Pop</button>
+        <button class="genre-tab" onclick="filterGenre('hiphop',this)">Hip Hop</button>
+        <button class="genre-tab" onclick="filterGenre('rnb',this)">R&B</button>
+        <button class="genre-tab" onclick="filterGenre('electronic',this)">Electronic</button>
+        <button class="genre-tab" onclick="filterGenre('chill',this)">Chill</button>
+        <button class="genre-tab" onclick="filterGenre('indie',this)">Indie</button>
+      </div>
+      <div class="track-list" id="track-list"></div>
+    </div>
+  </div>
+</div>
+
+  <!-- EDIT PROFILE MODAL -->
+<div id="modal-edit-profile" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Profile</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-profile')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Display name</label>
+        <input class="form-input" id="edit-display-name" placeholder="Your name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="edit-username" placeholder="yourvybe"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input" id="edit-bio" placeholder="Tell people your vybe..." style="min-height:80px;resize:none"></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-edit-profile')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Save ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- STORY VIEWER -->
+<div id="story-viewer" class="story-viewer hidden">
+  <div class="story-content">
+    <div class="story-progress" id="story-progress"></div>
+    <div class="story-top">
+      <div class="avatar" id="sv-avatar">?</div>
+      <div>
+        <div class="story-top-name" id="sv-name"></div>
+        <div class="story-top-time" id="sv-time"></div>
+      </div>
+      <button class="story-close" onclick="closeStoryViewer()">✕</button>
+    </div>
+    <img id="sv-img" class="story-media hidden" alt="story"/>
+    <video id="sv-video" class="story-media hidden" autoplay muted loop></video>
+    <div class="story-text-overlay" id="sv-text"></div>
+  </div>
+</div>
+
+  <!-- TOAST -->
+<div id="toast" class="toast hidden"></div>
+ 
+<!-- FIREBASE + APP JS -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, updateDoc, onSnapshot, serverTimestamp, where, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyArM0vl0V8t6XKIpAzKe8vjjGyIuaVny_o",
+  authDomain: "ur-vybe.firebaseapp.com",
+  projectId: "ur-vybe",
+  storageBucket: "ur-vybe.firebasestorage.app",
+  messagingSenderId: "1026295182316",
+  appId: "1:1026295182316:web:a4862bbea68f94343c46c9",
+  measurementId: "G-NYQ0W27WH4"
+};
+ 
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
+
+  // ---- STATE ----
+let currentUser = null;
+let currentProfile = null;
+let postTags = [];
+let reelTags = [];
+let postSelectedStickers = [];
+let selectedFilter = '';
+let currentDMUser = null;
+let dmUnsubscribe = null;
+let postFileData = null;
+let storyFileData = null;
+let reelFileData = null;
+ 
+const EMOJIS = ['🔥','💫','✨','🌊','🎵','🌸','🦋','🌙','⚡','🎨','😍','😂','🥰','😎','🤩','💀','🫶','💅','🥳','🎉','🌈','🦄','👑','💎','🍕','🍦','🎮','📱','💪','🙈'];
+const REACTIONS = ['❤️','🔥','😂','😍','💫','👏','😭','🤩'];
+
+  // ---- AUTH ----
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    showAuthError(e.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+  }
+};
+ 
+window.doSignup = async () => {
+  const username = document.getElementById('signup-username').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-pass').value;
+  const dob = document.getElementById('signup-dob').value;
+  if (!username || !email || !pass || !dob) { showAuthError('Please fill in all fields'); return; }
+  const age = (new Date() - new Date(dob)) / (1000*60*60*24*365.25);
+  if (age >= 16) { showAuthError('Vybe is for under-16s only! 🌟'); return; }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: username });
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      username, displayName: username, bio: '', avatar: '',
+      followers: 0, following: 0, posts: 0, dob,
+      createdAt: serverTimestamp()
+    });
+    toast('Welcome to vybe! ✨');
+  } catch(e) {
+    showAuthError(e.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+  }
+};
+
+  window.doLogout = async () => {
+  await signOut(auth);
+};
+ 
+window.showSignup = () => {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('signup-form').classList.remove('hidden');
+  clearAuthError();
+};
+window.showLogin = () => {
+  document.getElementById('signup-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+  clearAuthError();
+};
+ 
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+  function clearAuthError() { document.getElementById('auth-error').classList.add('hidden'); }
+ 
+// ---- AUTH STATE ----
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await loadProfile();
+    loadFeed();
+    loadStories();
+    loadReels();
+    loadDMs();
+    loadSuggestedUsers();
+    initStickerGrid();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+  // ---- PROFILE ----
+async function loadProfile() {
+  if (!currentUser) return;
+  const snap = await getDoc(doc(db, 'users', currentUser.uid));
+  if (snap.exists()) {
+    currentProfile = snap.data();
+    updateProfileUI();
+  }
+}
+ 
+function updateProfileUI() {
+  if (!currentProfile) return;
+  const name = currentProfile.displayName || currentProfile.username || 'You';
+  const handle = '@' + (currentProfile.username || 'you');
+  document.getElementById('sidebar-username').textContent = name;
+  document.getElementById('sidebar-handle').textContent = handle;
+  document.getElementById('settings-username').textContent = handle;
+  document.getElementById('profile-display-name').textContent = name;
+  document.getElementById('profile-bio-text').textContent = currentProfile.bio || 'Tap Edit profile to add a bio ✨';
+  document.getElementById('profile-follower-count').textContent = currentProfile.followers || 0;
+  document.getElementById('profile-following-count').textContent = currentProfile.following || 0;
+ 
+  const initials = name.charAt(0).toUpperCase();
+  const sba = document.getElementById('sidebar-avatar');
+  const pa = document.getElementById('profile-avatar-display');
+  if (currentProfile.avatar) {
+    sba.innerHTML = `<img src="${currentProfile.avatar}" alt="avatar"/>`;
+    pa.innerHTML = `<img src="${currentProfile.avatar}" alt="avatar"/><input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)"/>`;
+  } else {
+    sba.textContent = initials;
+    pa.innerHTML = initials + `<input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)"/>`;
+  }
+}
+ 
+window.saveProfile = async () => {
+  const displayName = document.getElementById('edit-display-name').value.trim();
+  const username = document.getElementById('edit-username').value.trim();
+  const bio = document.getElementById('edit-bio').value.trim();
+  if (!displayName || !username) { toast('Name and username required'); return; }
+  await updateDoc(doc(db, 'users', currentUser.uid), { displayName, username, bio });
+  await updateProfile(currentUser, { displayName });
+  currentProfile = { ...currentProfile, displayName, username, bio };
+  updateProfileUI();
+  closeModal('modal-edit-profile');
+  toast('Profile updated ✓');
+};
+ 
+window.showEditProfileModal = () => {
+  if (currentProfile) {
+    document.getElementById('edit-display-name').value = currentProfile.displayName || '';
+    document.getElementById('edit-username').value = currentProfile.username || '';
+    document.getElementById('edit-bio').value = currentProfile.bio || '';
+  }
+  openModal('modal-edit-profile');
+};
+ 
+window.triggerAvatarUpload = () => document.getElementById('avatar-upload').click();
   
