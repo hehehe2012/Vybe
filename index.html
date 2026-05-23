@@ -969,3 +969,796 @@ window.showEditProfileModal = () => {
  
 window.triggerAvatarUpload = () => document.getElementById('avatar-upload').click();
   
+window.uploadAvatar = async (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  toast('Uploading avatar...');
+  const r = ref(storage, `avatars/${currentUser.uid}`);
+  await uploadBytes(r, file);
+  const url = await getDownloadURL(r);
+  await updateDoc(doc(db, 'users', currentUser.uid), { avatar: url });
+  await updateProfile(currentUser, { photoURL: url });
+  currentProfile.avatar = url;
+  updateProfileUI();
+  toast('Avatar updated ✨');
+};
+
+// ---- FEED ----
+async function loadFeed() {
+  document.getElementById('posts-loading').style.display = 'block';
+  const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(20));
+  onSnapshot(q, (snap) => {
+    document.getElementById('posts-loading').style.display = 'none';
+    const container = document.getElementById('posts-container');
+    container.innerHTML = '';
+    snap.forEach(d => {
+      container.appendChild(renderPost(d.id, d.data()));
+    });
+    loadMyProfileGrid();
+  });
+}
+
+function renderPost(id, data) {
+  const div = document.createElement('div');
+  div.className = 'post-card';
+  div.id = 'post-' + id;
+
+  const isVideo = data.mediaType === 'video';
+  const mediaHTML = data.mediaURL
+    ? (isVideo
+        ? `<div class="post-image-wrap"><video src="${data.mediaURL}" controls playsinline style="width:100%;max-height:500px;object-fit:cover"></video></div>`
+        : `<div class="post-image-wrap"><img src="${data.mediaURL}" alt="post" loading="lazy"/>${data.filter ? `<div class="post-filter filter-${data.filter}"></div>` : ''}</div>`)
+    : '';
+
+  const tagsHTML = data.tags && data.tags.length
+    ? `<div class="post-tags-display">${data.tags.map(t => `<span class="post-tag-chip">@${t}</span>`).join('')}</div>` : '';
+
+  const stickersHTML = data.stickers && data.stickers.length
+    ? `<div class="post-stickers">${data.stickers.map(s => `<span class="post-sticker">${s}</span>`).join('')}</div>` : '';
+
+  const musicHTML = data.music
+    ? `<div class="post-music-tag"><span class="note">${data.music.emoji||'🎵'}</span><div class="info"><div class="name">${esc(data.music.title)}</div><div class="artist">${esc(data.music.artist)}</div></div></div>` : '';
+
+  const reactionsHTML = buildReactionsHTML(id, data.reactions || {});
+
+  const timeAgo = data.createdAt ? getTimeAgo(data.createdAt.toDate()) : 'just now';
+  const authorInitial = (data.authorName || 'U').charAt(0).toUpperCase();
+  const avatarHTML = data.authorAvatar
+    ? `<img src="${data.authorAvatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
+    : authorInitial;
+
+  div.innerHTML = `
+    <div class="post-header">
+      <div class="avatar" style="width:40px;height:40px;font-size:16px">${avatarHTML}</div>
+      <div class="post-user-info">
+        <div class="post-username">${esc(data.authorName || 'User')}</div>
+        <div class="post-time">${timeAgo}</div>
+      </div>
+      <div class="post-menu" onclick="showPostMenu('${id}')">⋯</div>
+    </div>
+    ${mediaHTML}
+    <div class="post-body">
+      <div class="post-caption">${esc(data.caption || '')}</div>
+      ${tagsHTML}
+      ${stickersHTML}
+      ${musicHTML}
+      <div class="post-actions">
+        <button class="action-btn" onclick="toggleLike('${id}')">❤️ <span id="likes-${id}">${data.likes || 0}</span></button>
+        <button class="action-btn" onclick="toggleEmojiPicker('${id}')">😄 React</button>
+        <button class="action-btn" onclick="repostPost('${id}')">🔁 Repost</button>
+        <button class="action-btn" onclick="shareToStory('${id}')">📖 Story</button>
+      </div>
+    </div>
+    <div class="reactions-bar" id="reactions-${id}">${reactionsHTML}</div>
+    <div id="emoji-picker-${id}" class="emoji-picker hidden">
+      ${REACTIONS.map(e => `<span class="emoji-opt" onclick="addReaction('${id}','${e}')">${e}</span>`).join('')}
+    </div>
+  `;
+  return div;
+}
+
+function buildReactionsHTML(postId, reactions) {
+  return Object.entries(reactions).map(([emoji, count]) =>
+    `<div class="reaction-chip" onclick="addReaction('${postId}','${emoji}')">${emoji} <span class="count">${count}</span></div>`
+  ).join('');
+}
+
+window.toggleLike = async (postId) => {
+  const ref2 = doc(db, 'posts', postId);
+  await updateDoc(ref2, { likes: increment(1) });
+  const el = document.getElementById('likes-' + postId);
+  if (el) el.textContent = parseInt(el.textContent) + 1;
+};
+
+window.addReaction = async (postId, emoji) => {
+  const ref2 = doc(db, 'posts', postId);
+  await updateDoc(ref2, { [`reactions.${emoji}`]: increment(1) });
+  const snap = await getDoc(ref2);
+  const reactions = snap.data().reactions || {};
+  document.getElementById('reactions-' + postId).innerHTML = buildReactionsHTML(postId, reactions);
+  document.getElementById('emoji-picker-' + postId).classList.add('hidden');
+};
+
+window.toggleEmojiPicker = (id) => {
+  document.getElementById('emoji-picker-' + id).classList.toggle('hidden');
+};
+
+window.repostPost = (id) => {
+  toast('Reposted to your feed! 🔁');
+};
+window.shareToStory = (id) => {
+  toast('Shared to your story! 📖');
+};
+window.showPostMenu = (id) => {
+  toast('Post options coming soon');
+};
+
+// ---- STORIES ----
+async function loadStories() {
+  const cutoff = new Date(Date.now() - 24*60*60*1000);
+  const q = query(collection(db, 'stories'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  const row = document.getElementById('stories-row');
+  row.innerHTML = `<div class="story-item" onclick="showNewStoryModal()"><div class="story-ring add-story">➕</div><div class="story-name">Your story</div></div>`;
+  snap.forEach(d => {
+    const data = d.data();
+    if (data.createdAt && data.createdAt.toDate() < cutoff) return;
+    const item = document.createElement('div');
+    item.className = 'story-item';
+    item.onclick = () => viewStory(d.id, data);
+    const initials = (data.authorName || 'U').charAt(0).toUpperCase();
+    const avatarContent = data.authorAvatar ? `<img src="${data.authorAvatar}" alt=""/>` : initials;
+    item.innerHTML = `
+      <div class="story-ring"><div class="story-avatar">${avatarContent}</div></div>
+      <div class="story-name">${esc(data.authorName || 'User')}</div>
+    `;
+    row.appendChild(item);
+  });
+}
+
+function viewStory(id, data) {
+  const viewer = document.getElementById('story-viewer');
+  viewer.classList.remove('hidden');
+  document.getElementById('sv-name').textContent = data.authorName || 'User';
+  document.getElementById('sv-time').textContent = data.createdAt ? getTimeAgo(data.createdAt.toDate()) : '';
+  document.getElementById('sv-avatar').textContent = (data.authorName || 'U').charAt(0).toUpperCase();
+  document.getElementById('sv-text').textContent = data.text || '';
+  const img = document.getElementById('sv-img');
+  const vid = document.getElementById('sv-video');
+  if (data.mediaURL) {
+    if (data.mediaType === 'video') {
+      img.classList.add('hidden'); vid.classList.remove('hidden');
+      vid.src = data.mediaURL;
+    } else {
+      vid.classList.add('hidden'); img.classList.remove('hidden');
+      img.src = data.mediaURL;
+    }
+  } else {
+    img.classList.add('hidden'); vid.classList.add('hidden');
+  }
+  document.getElementById('sv-avatar').style.background = `linear-gradient(135deg, var(--accent), var(--accent2))`;
+  document.getElementById('story-progress').innerHTML = `<div class="story-prog-bar"><div class="story-prog-fill" style="width:0%;transition:width 5s linear"></div></div>`;
+  setTimeout(() => { const fill = document.querySelector('.story-prog-fill'); if(fill) fill.style.width='100%'; }, 100);
+  setTimeout(() => closeStoryViewer(), 5000);
+}
+
+window.closeStoryViewer = () => {
+  document.getElementById('story-viewer').classList.add('hidden');
+  document.getElementById('sv-video').pause();
+};
+
+// ---- REELS ----
+async function loadReels() {
+  const q = query(collection(db, 'reels'), orderBy('createdAt', 'desc'), limit(12));
+  onSnapshot(q, snap => {
+    document.getElementById('reels-loading').style.display = 'none';
+    const grid = document.getElementById('reels-grid');
+    grid.innerHTML = '';
+    snap.forEach(d => {
+      const data = d.data();
+      const card = document.createElement('div');
+      card.className = 'reel-card';
+      const tagsText = data.tags && data.tags.length ? data.tags.map(t=>'@'+t).join(' ') : '';
+      card.innerHTML = `
+        ${data.mediaURL ? `<video src="${data.mediaURL}" muted loop playsinline></video>` : `<div class="reel-placeholder">🎬</div>`}
+        <div class="reel-play">▶</div>
+        <div class="reel-overlay">
+          <div class="reel-username">${esc(data.authorName || 'User')}</div>
+          <div class="reel-caption">${esc((data.caption||'').slice(0,40))} ${tagsText}</div>
+        </div>
+      `;
+      card.onclick = () => {
+        const v = card.querySelector('video');
+        if (v) { v.muted = false; v.play(); card.querySelector('.reel-play').style.display='none'; }
+      };
+      grid.appendChild(card);
+    });
+  });
+}
+
+// ---- DMS ----
+async function loadDMs() {
+  if (!currentUser) return;
+  const q = query(collection(db, 'dms'), where('participants', 'array-contains', currentUser.uid), orderBy('updatedAt', 'desc'));
+  onSnapshot(q, snap => {
+    const list = document.getElementById('dm-list-items');
+    list.innerHTML = '';
+    snap.forEach(d => {
+      const data = d.data();
+      const otherUid = data.participants.find(p => p !== currentUser.uid);
+      const item = document.createElement('div');
+      item.className = 'dm-item';
+      item.onclick = () => openDM(d.id, data, item);
+      item.innerHTML = `
+        <div class="avatar" style="width:36px;height:36px;font-size:14px">${(data.participantNames?.[otherUid] || 'U').charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="dm-name">${esc(data.participantNames?.[otherUid] || 'User')}</div>
+          <div class="dm-preview">${esc((data.lastMessage || '').slice(0,30))}</div>
+        </div>
+        <div class="dm-time">${data.updatedAt ? getTimeAgo(data.updatedAt.toDate()) : ''}</div>
+      `;
+      list.appendChild(item);
+    });
+    document.getElementById('dm-badge').style.display = snap.size > 0 ? '' : 'none';
+  });
+}
+
+async function openDM(dmId, data, itemEl) {
+  document.querySelectorAll('.dm-item').forEach(i => i.classList.remove('active'));
+  if (itemEl) itemEl.classList.add('active');
+  if (dmUnsubscribe) dmUnsubscribe();
+  currentDMUser = dmId;
+  const otherUid = data.participants.find(p => p !== currentUser.uid);
+  const otherName = data.participantNames?.[otherUid] || 'User';
+
+  const chat = document.getElementById('dm-chat');
+  chat.innerHTML = `
+    <div class="dm-chat-header">
+      <div class="avatar" style="width:36px;height:36px;font-size:14px">${otherName.charAt(0).toUpperCase()}</div>
+      <div style="font-weight:600;font-size:15px">${esc(otherName)}</div>
+    </div>
+    <div class="dm-messages" id="dm-messages-${dmId}"></div>
+    <div class="dm-input-row">
+      <input class="dm-input" id="dm-msg-input" placeholder="Message ${esc(otherName)}..." onkeydown="if(event.key==='Enter')sendDM('${dmId}')"/>
+      <button class="btn btn-primary btn-icon" onclick="sendDM('${dmId}')">➤</button>
+    </div>
+  `;
+
+  const msgsQ = query(collection(db, 'dms', dmId, 'messages'), orderBy('createdAt', 'asc'));
+  dmUnsubscribe = onSnapshot(msgsQ, snap => {
+    const container = document.getElementById(`dm-messages-${dmId}`);
+    if (!container) return;
+    container.innerHTML = '';
+    snap.forEach(d => {
+      const m = d.data();
+      const mine = m.senderId === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = 'msg ' + (mine ? 'mine' : 'theirs');
+      div.innerHTML = `<div class="msg-bubble">${esc(m.text)}</div><div class="msg-time">${m.createdAt ? getTimeAgo(m.createdAt.toDate()) : 'now'}</div>`;
+      container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+  });
+}
+
+window.sendDM = async (dmId) => {
+  const input = document.getElementById('dm-msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await addDoc(collection(db, 'dms', dmId, 'messages'), {
+    text, senderId: currentUser.uid,
+    senderName: currentProfile?.username || currentUser.displayName || 'User',
+    createdAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, 'dms', dmId), { lastMessage: text, updatedAt: serverTimestamp() });
+};
+
+window.showNewDMModal = () => openModal('modal-new-dm');
+
+window.startNewDM = async () => {
+  const toUsername = document.getElementById('dm-to-input').value.trim().replace('@','');
+  if (!toUsername) { toast('Enter a username'); return; }
+  const q = query(collection(db, 'users'), where('username', '==', toUsername));
+  const snap = await getDocs(q);
+  if (snap.empty) { toast('User not found'); return; }
+  const otherUser = snap.docs[0];
+  const otherUid = otherUser.id;
+  const otherData = otherUser.data();
+  if (otherUid === currentUser.uid) { toast("That's you!"); return; }
+
+  const existQ = query(collection(db, 'dms'), where('participants', 'array-contains', currentUser.uid));
+  const existSnap = await getDocs(existQ);
+  let existingDM = null;
+  existSnap.forEach(d => {
+    if (d.data().participants.includes(otherUid)) existingDM = d.id;
+  });
+
+  if (!existingDM) {
+    const myName = currentProfile?.username || currentUser.displayName || 'User';
+    const dmRef = await addDoc(collection(db, 'dms'), {
+      participants: [currentUser.uid, otherUid],
+      participantNames: { [currentUser.uid]: myName, [otherUid]: otherData.username || otherData.displayName || 'User' },
+      lastMessage: '', updatedAt: serverTimestamp(), createdAt: serverTimestamp()
+    });
+    existingDM = dmRef.id;
+  }
+  closeModal('modal-new-dm');
+  toast(`Chat with @${toUsername} opened!`);
+};
+
+// ---- POST CREATION ----
+window.showNewPostModal = () => {
+  postTags = []; postSelectedStickers = []; selectedFilter = ''; postFileData = null; postSelectedMusic = null;
+  document.getElementById('post-caption').value = '';
+  document.getElementById('tags-display').innerHTML = '';
+  document.getElementById('selected-stickers-display').innerHTML = '';
+  document.getElementById('post-preview-wrap').classList.add('hidden');
+  document.getElementById('post-preview').innerHTML = '';
+  openModal('modal-new-post');
+};
+
+window.handlePostFile = async (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  postFileData = file;
+  const url = URL.createObjectURL(file);
+  const wrap = document.getElementById('post-preview-wrap');
+  const preview = document.getElementById('post-preview');
+  wrap.classList.remove('hidden');
+  if (file.type.startsWith('video')) {
+    preview.innerHTML = `<video src="${url}" controls style="width:100%;max-height:300px;object-fit:cover;border-radius:10px"></video>`;
+  } else {
+    preview.innerHTML = `<img src="${url}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px"/>`;
+  }
+};
+
+window.handleStoryFile = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  storyFileData = file;
+  const url = URL.createObjectURL(file);
+  const wrap = document.getElementById('story-preview-wrap');
+  const preview = document.getElementById('story-preview');
+  wrap.classList.remove('hidden');
+  if (file.type.startsWith('video')) {
+    preview.innerHTML = `<video src="${url}" controls style="width:100%;max-height:300px;object-fit:cover;border-radius:10px"></video>`;
+  } else {
+    preview.innerHTML = `<img src="${url}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px"/>`;
+  }
+};
+
+window.handleReelFile = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  reelFileData = file;
+  const url = URL.createObjectURL(file);
+  const wrap = document.getElementById('reel-preview-wrap');
+  const preview = document.getElementById('reel-preview');
+  wrap.classList.remove('hidden');
+  preview.innerHTML = `<video src="${url}" controls style="width:100%;max-height:300px;object-fit:cover;border-radius:10px"></video>`;
+};
+
+window.selectFilter = (el, filter) => {
+  document.querySelectorAll('.filter-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFilter = filter;
+  const img = document.querySelector('#post-preview img');
+  if (img) {
+    img.className = filter ? 'filter-' + filter : '';
+    if (filter === 'moon') img.style.filter = 'grayscale(1) contrast(1.1) brightness(1.1)';
+    else if (filter === 'lark') img.style.filter = 'brightness(1.1) contrast(0.9) saturate(0.85)';
+    else if (filter === 'reyes') img.style.filter = 'sepia(0.22) brightness(1.1) contrast(0.85)';
+    else img.style.filter = '';
+  }
+};
+
+window.handleTagInput = (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.replace('@','').trim();
+    if (val && !postTags.includes(val)) {
+      postTags.push(val);
+      renderTags('tags-display', postTags, 'post');
+    }
+    e.target.value = '';
+  }
+};
+
+window.handleReelTagInput = (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.replace('@','').trim();
+    if (val && !reelTags.includes(val)) {
+      reelTags.push(val);
+      renderTags('reel-tags-display', reelTags, 'reel');
+    }
+    e.target.value = '';
+  }
+};
+
+function renderTags(containerId, tags, type) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = tags.map((t,i) => `<span class="tag-chip">@${esc(t)}<span class="tag-chip-remove" onclick="removeTag(${i},'${type}')">✕</span></span>`).join('');
+}
+window.removeTag = (i, type) => {
+  if (type === 'post') { postTags.splice(i,1); renderTags('tags-display', postTags, 'post'); }
+  else { reelTags.splice(i,1); renderTags('reel-tags-display', reelTags, 'reel'); }
+};
+
+function initStickerGrid() {
+  const grid = document.getElementById('sticker-grid-post');
+  if (!grid) return;
+  grid.innerHTML = EMOJIS.map(e => `<span class="sticker-item" onclick="addSticker('${e}')">${e}</span>`).join('');
+}
+window.addSticker = (emoji) => {
+  if (!postSelectedStickers.includes(emoji)) {
+    postSelectedStickers.push(emoji);
+    document.getElementById('selected-stickers-display').innerHTML =
+      postSelectedStickers.map(s => `<span style="font-size:28px">${s}</span>`).join('');
+  }
+};
+
+window.submitPost = async () => {
+  const caption = document.getElementById('post-caption').value.trim();
+  if (!caption && !postFileData) { toast('Add a caption or photo!'); return; }
+  toast('Posting... ✨');
+  closeModal('modal-new-post');
+
+  let mediaURL = '', mediaType = '';
+  if (postFileData) {
+    const r = ref(storage, `posts/${currentUser.uid}/${Date.now()}_${postFileData.name}`);
+    await uploadBytes(r, postFileData);
+    mediaURL = await getDownloadURL(r);
+    mediaType = postFileData.type.startsWith('video') ? 'video' : 'image';
+  }
+
+  await addDoc(collection(db, 'posts'), {
+    caption, mediaURL, mediaType, filter: selectedFilter,
+    tags: postTags, stickers: postSelectedStickers,
+    music: postSelectedMusic ? { title: postSelectedMusic.title, artist: postSelectedMusic.artist, emoji: postSelectedMusic.emoji } : null,
+    authorId: currentUser.uid,
+    authorName: currentProfile?.username || currentUser.displayName || 'User',
+    authorAvatar: currentProfile?.avatar || '',
+    likes: 0, reactions: {},
+    createdAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, 'users', currentUser.uid), { posts: increment(1) });
+  toast('Posted! ✨');
+  postTags = []; postSelectedStickers = []; postFileData = null;
+};
+
+window.submitStory = async () => {
+  const text = document.getElementById('story-text').value.trim();
+  if (!text && !storyFileData) { toast('Add a photo or text!'); return; }
+  toast('Sharing story...');
+  closeModal('modal-new-story');
+
+  let mediaURL = '', mediaType = '';
+  if (storyFileData) {
+    const r = ref(storage, `stories/${currentUser.uid}/${Date.now()}`);
+    await uploadBytes(r, storyFileData);
+    mediaURL = await getDownloadURL(r);
+    mediaType = storyFileData.type.startsWith('video') ? 'video' : 'image';
+  }
+  await addDoc(collection(db, 'stories'), {
+    text, mediaURL, mediaType,
+    authorId: currentUser.uid,
+    authorName: currentProfile?.username || currentUser.displayName || 'User',
+    authorAvatar: currentProfile?.avatar || '',
+    createdAt: serverTimestamp()
+  });
+  storyFileData = null;
+  toast('Story shared! 📖');
+  loadStories();
+};
+
+window.submitReel = async () => {
+  const caption = document.getElementById('reel-caption').value.trim();
+  if (!reelFileData) { toast('Upload a video first!'); return; }
+  toast('Uploading reel... 🎬');
+  closeModal('modal-new-reel');
+  const r = ref(storage, `reels/${currentUser.uid}/${Date.now()}`);
+  await uploadBytes(r, reelFileData);
+  const mediaURL = await getDownloadURL(r);
+  await addDoc(collection(db, 'reels'), {
+    caption, mediaURL, tags: reelTags,
+    authorId: currentUser.uid,
+    authorName: currentProfile?.username || currentUser.displayName || 'User',
+    authorAvatar: currentProfile?.avatar || '',
+    likes: 0, createdAt: serverTimestamp()
+  });
+  reelFileData = null; reelTags = [];
+  toast('Reel posted! 🎬');
+};
+
+// ---- PROFILE GRID ----
+async function loadMyProfileGrid() {
+  if (!currentUser) return;
+  const q = query(collection(db, 'posts'), where('authorId', '==', currentUser.uid), orderBy('createdAt','desc'));
+  const snap = await getDocs(q);
+  document.getElementById('profile-post-count').textContent = snap.size;
+  const grid = document.getElementById('profile-grid');
+  grid.innerHTML = '';
+  snap.forEach(d => {
+    const data = d.data();
+    if (!data.mediaURL) return;
+    const item = document.createElement('div');
+    item.className = 'profile-post';
+    if (data.mediaType === 'video') {
+      item.innerHTML = `<video src="${data.mediaURL}" muted style="width:100%;height:100%;object-fit:cover"></video>`;
+    } else {
+      item.innerHTML = `<img src="${data.mediaURL}" alt="post" loading="lazy"/>`;
+    }
+    grid.appendChild(item);
+  });
+}
+
+// ---- SUGGESTED USERS ----
+async function loadSuggestedUsers() {
+  const q = query(collection(db, 'users'), limit(5));
+  const snap = await getDocs(q);
+  const container = document.getElementById('suggested-users');
+  container.innerHTML = '';
+  snap.forEach(d => {
+    if (d.id === currentUser?.uid) return;
+    const data = d.data();
+    const item = document.createElement('div');
+    item.className = 'suggest-user';
+    const initials = (data.displayName || data.username || 'U').charAt(0).toUpperCase();
+    item.innerHTML = `
+      <div class="avatar" style="width:32px;height:32px;font-size:12px">${data.avatar ? `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>` : initials}</div>
+      <div><div class="suggest-name">${esc(data.displayName || data.username || 'User')}</div><div class="suggest-handle">@${esc(data.username || 'user')}</div></div>
+      <button class="follow-btn" onclick="this.classList.toggle('following');this.textContent=this.classList.contains('following')?'Following':'Follow'">Follow</button>
+    `;
+    container.appendChild(item);
+  });
+}
+
+// ---- NAVIGATION ----
+window.showPage = (page, el) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titles = { home: 'Home', reels: 'Reels', dms: 'Messages', profile: 'Profile', settings: 'Settings' };
+  document.getElementById('page-title').textContent = titles[page] || 'vybe';
+};
+
+window.showNewStoryModal = () => { storyFileData = null; document.getElementById('story-text').value = ''; document.getElementById('story-preview-wrap').classList.add('hidden'); openModal('modal-new-story'); };
+window.showNewReelModal = () => { reelFileData = null; reelTags = []; document.getElementById('reel-caption').value = ''; document.getElementById('reel-preview-wrap').classList.add('hidden'); document.getElementById('reel-tags-display').innerHTML=''; openModal('modal-new-reel'); };
+
+// ---- THEME ----
+window.setTheme = (theme, el) => {
+  document.body.setAttribute('data-theme', theme === 'default' ? '' : theme);
+  document.querySelectorAll('.theme-dot').forEach(d => { d.classList.remove('selected'); d.textContent = ''; });
+  el.classList.add('selected'); el.textContent = '✓';
+  localStorage.setItem('vybe-theme', theme);
+};
+window.toggleLightMode = (cb) => {
+  if (cb.checked) document.body.setAttribute('data-theme', (localStorage.getItem('vybe-theme') === 'default' ? '' : localStorage.getItem('vybe-theme') || '') + ' light');
+  else document.body.setAttribute('data-theme', localStorage.getItem('vybe-theme') === 'default' ? '' : localStorage.getItem('vybe-theme') || '');
+};
+
+const savedTheme = localStorage.getItem('vybe-theme');
+if (savedTheme && savedTheme !== 'default') {
+  document.body.setAttribute('data-theme', savedTheme);
+  const dot = document.querySelector(`[data-theme="${savedTheme}"]`);
+  if (dot) { document.querySelectorAll('.theme-dot').forEach(d=>{d.classList.remove('selected');d.textContent=''}); dot.classList.add('selected'); dot.textContent='✓'; }
+}
+
+// ---- UTILS ----
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+window.closeModal = closeModal;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.add('hidden'), 2500);
+}
+window.toast = toast;
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getTimeAgo(date) {
+  const s = Math.floor((new Date() - date) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+// ---- MUSIC ----
+const TRACKS = [
+  // Pop
+  { id: 1, title: "Blinding Lights", artist: "The Weeknd", genre: "pop", emoji: "🌟", duration: "3:22", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+  { id: 2, title: "As It Was", artist: "Harry Styles", genre: "pop", emoji: "💫", duration: "2:37", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+  { id: 3, title: "Stay", artist: "The Kid LAROI", genre: "pop", emoji: "✨", duration: "2:21", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+  { id: 4, title: "Flowers", artist: "Miley Cyrus", genre: "pop", emoji: "🌸", duration: "3:20", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+  { id: 5, title: "Cruel Summer", artist: "Taylor Swift", genre: "pop", emoji: "☀️", duration: "2:58", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+  // Hip Hop
+  { id: 6, title: "HUMBLE.", artist: "Kendrick Lamar", genre: "hiphop", emoji: "🔥", duration: "2:57", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+  { id: 7, title: "God's Plan", artist: "Drake", genre: "hiphop", emoji: "🙏", duration: "3:18", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+  { id: 8, title: "Sicko Mode", artist: "Travis Scott", genre: "hiphop", emoji: "🌙", duration: "5:12", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+  // R&B
+  { id: 9, title: "Creepin'", artist: "Metro Boomin", genre: "rnb", emoji: "🌊", duration: "3:38", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+  { id: 10, title: "Love Story", artist: "Indila", genre: "rnb", emoji: "❤️", duration: "3:44", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+  // Electronic
+  { id: 11, title: "Titanium", artist: "David Guetta", genre: "electronic", emoji: "⚡", duration: "4:05", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+  { id: 12, title: "Levels", artist: "Avicii", genre: "electronic", emoji: "🎛️", duration: "3:17", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+  // Chill
+  { id: 13, title: "Sunset Vibes", artist: "Lo-Fi Beats", genre: "chill", emoji: "🌅", duration: "3:45", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+  { id: 14, title: "Study Session", artist: "Chill Hop", genre: "chill", emoji: "📚", duration: "4:12", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+  // Indie
+  { id: 15, title: "Electric Feel", artist: "MGMT", genre: "indie", emoji: "🎸", duration: "3:49", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+  { id: 16, title: "Do I Wanna Know?", artist: "Arctic Monkeys", genre: "indie", emoji: "🐒", duration: "4:32", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+];
+
+let currentTrack = null;
+let isPlaying = false;
+let audio = new Audio();
+let currentGenre = 'all';
+let filteredTracks = [...TRACKS];
+let currentTrackIndex = 0;
+let postSelectedMusic = null;
+let pickingForPost = false;
+
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    const pct = (audio.currentTime / audio.duration) * 100;
+    const fill = document.getElementById('music-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+  }
+});
+audio.addEventListener('ended', () => nextTrack());
+
+window.openMusicModal = () => {
+  pickingForPost = false;
+  renderTrackList(filteredTracks);
+  openModal('modal-music');
+};
+
+window.openMusicPickerForPost = () => {
+  pickingForPost = true;
+  renderTrackList(filteredTracks);
+  openModal('modal-music');
+};
+
+window.filterGenre = (genre, el) => {
+  currentGenre = genre;
+  document.querySelectorAll('.genre-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+};
+
+window.filterTracks = (query) => {
+  applyFilters(query);
+};
+
+function applyFilters(query = document.getElementById('music-search')?.value || '') {
+  filteredTracks = TRACKS.filter(t => {
+    const matchGenre = currentGenre === 'all' || t.genre === currentGenre;
+    const matchQuery = !query || t.title.toLowerCase().includes(query.toLowerCase()) || t.artist.toLowerCase().includes(query.toLowerCase());
+    return matchGenre && matchQuery;
+  });
+  renderTrackList(filteredTracks);
+}
+
+function renderTrackList(tracks) {
+  const list = document.getElementById('track-list');
+  if (!list) return;
+  list.innerHTML = tracks.map((t, i) => `
+    <div class="track-item ${currentTrack?.id === t.id ? 'playing' : ''}" id="track-item-${t.id}">
+      <div class="track-num">${currentTrack?.id === t.id && isPlaying ? '🎵' : (i + 1)}</div>
+      <div class="track-thumb">${t.emoji}</div>
+      <div class="track-info">
+        <div class="track-name">${esc(t.title)}</div>
+        <div class="track-artist">${esc(t.artist)}</div>
+      </div>
+      <div class="track-duration">${t.duration}</div>
+      <button class="track-play-btn" onclick="playTrack(${t.id})">${currentTrack?.id === t.id && isPlaying ? '⏸' : '▶'}</button>
+    </div>
+  `).join('');
+}
+
+window.playTrack = (id) => {
+  const track = TRACKS.find(t => t.id === id);
+  if (!track) return;
+
+  if (pickingForPost) {
+    postSelectedMusic = track;
+    updatePostMusicDisplay();
+    closeModal('modal-music');
+    toast(`🎵 "${track.title}" added to post!`);
+    return;
+  }
+
+  currentTrackIndex = filteredTracks.findIndex(t => t.id === id);
+  if (currentTrack?.id === id) {
+    togglePlayPause();
+    return;
+  }
+  currentTrack = track;
+  audio.src = track.src;
+  audio.play();
+  isPlaying = true;
+  updateMusicBar();
+  renderTrackList(filteredTracks);
+};
+
+window.togglePlayPause = () => {
+  if (!currentTrack) { openMusicModal(); return; }
+  if (isPlaying) { audio.pause(); isPlaying = false; }
+  else { audio.play(); isPlaying = true; }
+  updateMusicBar();
+  renderTrackList(filteredTracks);
+};
+
+window.nextTrack = () => {
+  if (!filteredTracks.length) return;
+  currentTrackIndex = (currentTrackIndex + 1) % filteredTracks.length;
+  playTrack(filteredTracks[currentTrackIndex].id);
+};
+
+window.prevTrack = () => {
+  if (!filteredTracks.length) return;
+  currentTrackIndex = (currentTrackIndex - 1 + filteredTracks.length) % filteredTracks.length;
+  playTrack(filteredTracks[currentTrackIndex].id);
+};
+
+window.seekMusic = (e) => {
+  if (!audio.duration) return;
+  const bar = e.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+};
+
+function updateMusicBar() {
+  const bar = document.getElementById('music-bar');
+  if (!bar) return;
+  if (currentTrack) {
+    bar.classList.remove('hidden');
+    document.getElementById('music-title').textContent = currentTrack.title;
+    document.getElementById('music-artist').textContent = currentTrack.artist;
+    document.getElementById('music-thumb').textContent = currentTrack.emoji;
+    document.getElementById('play-pause-btn').textContent = isPlaying ? '⏸️' : '▶️';
+  }
+}
+
+function updatePostMusicDisplay() {
+  const el = document.getElementById('post-music-display');
+  if (!el) return;
+  if (postSelectedMusic) {
+    el.innerHTML = `
+      <div class="post-music-tag">
+        <span class="note">${postSelectedMusic.emoji}</span>
+        <div class="info">
+          <div class="name">${esc(postSelectedMusic.title)}</div>
+          <div class="artist">${esc(postSelectedMusic.artist)}</div>
+        </div>
+        <button class="remove" onclick="removePostMusic()">✕</button>
+      </div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+window.removePostMusic = () => {
+  postSelectedMusic = null;
+  updatePostMusicDisplay();
+};
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.add('hidden'); });
+});
+</script>
+</body>
+</html>
