@@ -252,7 +252,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .story-media { width: 100%; height: 100%; object-fit: cover; }
 .story-text-overlay { position: absolute; bottom: 80px; left: 20px; right: 20px; color: white; font-size: 18px; font-weight: 500; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
 
-  /* RIGHT PANEL */
+/* RIGHT PANEL */
 .panel-section { padding: 16px; border-bottom: 1px solid var(--border); }
 .panel-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 .suggest-user { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
@@ -262,28 +262,28 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .follow-btn { font-size: 11px; padding: 4px 12px; border-radius: 99px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; transition: all 0.2s; }
 .follow-btn:hover, .follow-btn.following { background: var(--accent); color: var(--bg); }
 
-  /* STICKER PICKER */
+/* STICKER PICKER */
 .sticker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; }
 .sticker-item { font-size: 28px; cursor: pointer; text-align: center; padding: 4px; border-radius: 8px; transition: all 0.15s; }
 .sticker-item:hover { background: var(--bg3); transform: scale(1.2); }
 
-  /* TOAST */
+/* TOAST */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg2); border: 1px solid var(--border); border-radius: 99px; padding: 10px 20px; font-size: 13px; z-index: 9999; animation: fadeInUp 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
 @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-  /* UPLOAD AREA */
+/* UPLOAD AREA */
 .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
 .upload-area:hover { border-color: var(--accent); background: rgba(192,132,252,0.04); }
 .upload-icon { font-size: 32px; margin-bottom: 8px; }
 .upload-text { font-size: 14px; color: var(--muted); }
 
-  /* MOBILE NAV */
+/* MOBILE NAV */
 .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 0; z-index: 100; }
 .mobile-nav-items { display: flex; justify-content: space-around; }
 .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 6px 16px; color: var(--muted); font-size: 10px; transition: color 0.2s; }
 .mobile-nav-item.active { color: var(--accent); }
 .mobile-nav-icon { font-size: 20px; }
-  
+
 @media (max-width: 768px) {
   #sidebar { display: none; }
   #right-panel { display: none; }
@@ -302,10 +302,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
 .toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: white; }
 
-  /* SELECT */
+/* SELECT */
 select { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-family: var(--font-body); font-size: 13px; outline: none; }
 
-  /* MUSIC */
+/* MUSIC */
 .music-bar { position: fixed; bottom: 0; left: 240px; right: 300px; background: var(--bg2); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 12px; z-index: 50; }
 .music-bar.mobile { left: 0; right: 0; bottom: 60px; }
 .music-thumb { width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -316,12 +316,12 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
 .music-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px; transition: color 0.2s; }
 .music-btn:hover { color: var(--text); }
 .music-btn.active { color: var(--accent); }
-.music-progress { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; cursor: pointer; max-width: 200px; }.music-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s linear; }
+.music-progress { flex: 1; height: 3px; background: var(--bg3); border-radius: 99px; cursor: pointer; max-width: 200px; }
 .music-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.5s linear; }
 .music-vol { width: 60px; height: 3px; background: var(--bg3); border-radius: 99px; cursor: pointer; }
 .music-vol-fill { height: 100%; background: var(--muted); border-radius: 99px; }
 
-  /* MUSIC MODAL */
+/* MUSIC MODAL */
 .music-search-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-family: var(--font-body); font-size: 14px; outline: none; margin-bottom: 16px; }
 .music-search-input:focus { border-color: var(--accent); }
 .track-list { display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto; }
@@ -347,19 +347,19 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
 .post-music-tag .artist { font-size: 11px; color: var(--muted); }
 .post-music-tag .remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
 
-  @media (max-width: 768px) {
+@media (max-width: 768px) {
   .music-bar { left: 0; right: 0; bottom: 60px; }
   .music-progress { max-width: 100px; }
   .music-vol { display: none; }
 }
- 
+
 .hidden { display: none !important; }
 .page { display: none; }
 .page.active { display: block; }
 </style>
 </head>
 <body>
- 
+
 <!-- AUTH SCREEN -->
 <div id="auth-screen" class="auth-screen" style="display:flex">
   <div class="auth-card">
@@ -390,7 +390,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
       <div class="form-group">
         <label class="form-label">Password</label>
         <input class="form-input" id="signup-pass" type="password" placeholder="••••••••"/>
-        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">Date of Birth</label>
         <input class="form-input" id="signup-dob" type="date"/>
@@ -402,7 +402,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- MAIN APP -->
+<!-- MAIN APP -->
 <div id="app" style="display:none">
   <!-- SIDEBAR -->
   <div id="sidebar">
@@ -454,7 +454,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
           <div id="posts-loading" style="text-align:center;color:var(--muted);padding:20px">Loading posts...</div>
         </div>
       </div>
- 
+
       <!-- REELS PAGE -->
       <div id="page-reels" class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -463,7 +463,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
         </div>
         <div class="reels-grid" id="reels-grid"></div>
         <div id="reels-loading" style="text-align:center;color:var(--muted);padding:20px">Loading reels...</div>
-        </div>
+      </div>
 
       <!-- DMS PAGE -->
       <div id="page-dms" class="page">
@@ -492,7 +492,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
               <div class="stat"><div class="stat-num" id="profile-post-count">0</div><div class="stat-label">posts</div></div>
               <div class="stat"><div class="stat-num" id="profile-follower-count">0</div><div class="stat-label">followers</div></div>
               <div class="stat"><div class="stat-num" id="profile-following-count">0</div><div class="stat-label">following</div></div>
-              </div>
+            </div>
           </div>
           <div class="profile-name" id="profile-display-name">Your Name</div>
           <div class="profile-bio" id="profile-bio-text">Tap to add a bio...</div>
@@ -524,7 +524,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
           <div class="setting-row" style="margin-top:12px">
             <div class="setting-label">Light mode</div>
             <label class="toggle"><input type="checkbox" id="light-mode-toggle" onchange="toggleLightMode(this)"/><span class="toggle-slider"></span></label>
-            </div>
+          </div>
         </div>
         <div class="settings-section">
           <div class="settings-title">👤 Account</div>
@@ -535,7 +535,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
           <div class="setting-row">
             <div class="setting-label">Sign out</div>
             <button class="btn btn-ghost" onclick="doLogout()">Sign out</button>
-            </div>
+          </div>
         </div>
         <div class="settings-section">
           <div class="settings-title">🔒 Privacy</div>
@@ -550,9 +550,9 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
         </div>
       </div>
 
-     </div><!-- /content -->
+    </div><!-- /content -->
   </div><!-- /main -->
- 
+
   <!-- RIGHT PANEL -->
   <div id="right-panel">
     <div class="panel-section">
@@ -596,10 +596,10 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
     </div>
   </div>
 </div>
- 
+
 <!-- MODALS -->
 
-  <!-- NEW POST MODAL -->
+<!-- NEW POST MODAL -->
 <div id="modal-new-post" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -611,7 +611,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
         <div class="upload-icon">📷</div>
         <div class="upload-text">Tap to add a photo or video</div>
         <input type="file" id="post-file" accept="image/*,video/*" style="display:none" onchange="handlePostFile(this)"/>
-        </div>
+      </div>
       <div id="post-preview-wrap" class="hidden">
         <div class="upload-preview" id="post-preview"></div>
         <div class="filter-selector" id="filter-selector">
@@ -655,7 +655,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- NEW STORY MODAL -->
+<!-- NEW STORY MODAL -->
 <div id="modal-new-story" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -667,7 +667,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
         <div class="upload-icon">📸</div>
         <div class="upload-text">Tap to add a photo or video (disappears in 24hrs)</div>
         <input type="file" id="story-file" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"/>
-        </div>
+      </div>
       <div id="story-preview-wrap" class="hidden">
         <div class="upload-preview" id="story-preview"></div>
       </div>
@@ -680,7 +680,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- NEW REEL MODAL -->
+<!-- NEW REEL MODAL -->
 <div id="modal-new-reel" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -695,7 +695,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
       </div>
       <div id="reel-preview-wrap" class="hidden">
         <div class="upload-preview" id="reel-preview"></div>
-        </div>
+      </div>
       <textarea class="create-input" id="reel-caption" placeholder="Caption your reel..." style="margin-top:12px;min-height:60px"></textarea>
       <div class="tag-input-wrap" id="reel-tag-wrap">
         <div id="reel-tags-display"></div>
@@ -709,7 +709,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- NEW DM MODAL -->
+<!-- NEW DM MODAL -->
 <div id="modal-new-dm" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -726,7 +726,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- MUSIC MODAL -->
+<!-- MUSIC MODAL -->
 <div id="modal-music" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -749,7 +749,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- EDIT PROFILE MODAL -->
+<!-- EDIT PROFILE MODAL -->
 <div id="modal-edit-profile" class="modal-overlay hidden">
   <div class="modal">
     <div class="modal-header">
@@ -777,7 +777,7 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- STORY VIEWER -->
+<!-- STORY VIEWER -->
 <div id="story-viewer" class="story-viewer hidden">
   <div class="story-content">
     <div class="story-progress" id="story-progress"></div>
@@ -795,9 +795,9 @@ select { background: var(--bg3); border: 1px solid var(--border); border-radius:
   </div>
 </div>
 
-  <!-- TOAST -->
+<!-- TOAST -->
 <div id="toast" class="toast hidden"></div>
- 
+
 <!-- FIREBASE + APP JS -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -805,7 +805,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, updateDoc, onSnapshot, serverTimestamp, where, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyArM0vl0V8t6XKIpAzKe8vjjGyIuaVny_o",
   authDomain: "ur-vybe.firebaseapp.com",
   projectId: "ur-vybe",
@@ -814,13 +814,13 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
   appId: "1:1026295182316:web:a4862bbea68f94343c46c9",
   measurementId: "G-NYQ0W27WH4"
 };
- 
+
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const storage = getStorage(fbApp);
 
-  // ---- STATE ----
+// ---- STATE ----
 let currentUser = null;
 let currentProfile = null;
 let postTags = [];
@@ -832,11 +832,11 @@ let dmUnsubscribe = null;
 let postFileData = null;
 let storyFileData = null;
 let reelFileData = null;
- 
+
 const EMOJIS = ['🔥','💫','✨','🌊','🎵','🌸','🦋','🌙','⚡','🎨','😍','😂','🥰','😎','🤩','💀','🫶','💅','🥳','🎉','🌈','🦄','👑','💎','🍕','🍦','🎮','📱','💪','🙈'];
 const REACTIONS = ['❤️','🔥','😂','😍','💫','👏','😭','🤩'];
 
-  // ---- AUTH ----
+// ---- AUTH ----
 window.doLogin = async () => {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
@@ -846,7 +846,7 @@ window.doLogin = async () => {
     showAuthError(e.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
   }
 };
- 
+
 window.doSignup = async () => {
   const username = document.getElementById('signup-username').value.trim();
   const email = document.getElementById('signup-email').value.trim();
@@ -865,14 +865,22 @@ window.doSignup = async () => {
     });
     toast('Welcome to vybe! ✨');
   } catch(e) {
-    showAuthError(e.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+    console.error('Signup error:', e);
+    let msg = e.message || 'Unknown error';
+    if (e.code === 'auth/email-already-in-use') msg = 'That email is already registered! Try logging in instead.';
+    else if (e.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+    else if (e.code === 'auth/weak-password') msg = 'Password must be at least 6 characters.';
+    else if (e.code === 'auth/network-request-failed') msg = 'No internet connection. Check your WiFi!';
+    else if (e.code === 'auth/configuration-not-found') msg = 'Firebase setup issue — contact support. Code: ' + e.code;
+    else msg = e.code + ': ' + e.message;
+    showAuthError(msg);
   }
 };
 
-  window.doLogout = async () => {
+window.doLogout = async () => {
   await signOut(auth);
 };
- 
+
 window.showSignup = () => {
   document.getElementById('login-form').classList.add('hidden');
   document.getElementById('signup-form').classList.remove('hidden');
@@ -883,14 +891,14 @@ window.showLogin = () => {
   document.getElementById('login-form').classList.remove('hidden');
   clearAuthError();
 };
- 
+
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
   el.classList.remove('hidden');
 }
-  function clearAuthError() { document.getElementById('auth-error').classList.add('hidden'); }
- 
+function clearAuthError() { document.getElementById('auth-error').classList.add('hidden'); }
+
 // ---- AUTH STATE ----
 onAuthStateChanged(auth, async (user) => {
   if (user) {
@@ -911,7 +919,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-  // ---- PROFILE ----
+// ---- PROFILE ----
 async function loadProfile() {
   if (!currentUser) return;
   const snap = await getDoc(doc(db, 'users', currentUser.uid));
@@ -920,7 +928,7 @@ async function loadProfile() {
     updateProfileUI();
   }
 }
- 
+
 function updateProfileUI() {
   if (!currentProfile) return;
   const name = currentProfile.displayName || currentProfile.username || 'You';
@@ -932,7 +940,7 @@ function updateProfileUI() {
   document.getElementById('profile-bio-text').textContent = currentProfile.bio || 'Tap Edit profile to add a bio ✨';
   document.getElementById('profile-follower-count').textContent = currentProfile.followers || 0;
   document.getElementById('profile-following-count').textContent = currentProfile.following || 0;
- 
+
   const initials = name.charAt(0).toUpperCase();
   const sba = document.getElementById('sidebar-avatar');
   const pa = document.getElementById('profile-avatar-display');
@@ -944,7 +952,7 @@ function updateProfileUI() {
     pa.innerHTML = initials + `<input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)"/>`;
   }
 }
- 
+
 window.saveProfile = async () => {
   const displayName = document.getElementById('edit-display-name').value.trim();
   const username = document.getElementById('edit-username').value.trim();
@@ -957,7 +965,7 @@ window.saveProfile = async () => {
   closeModal('modal-edit-profile');
   toast('Profile updated ✓');
 };
- 
+
 window.showEditProfileModal = () => {
   if (currentProfile) {
     document.getElementById('edit-display-name').value = currentProfile.displayName || '';
@@ -966,9 +974,9 @@ window.showEditProfileModal = () => {
   }
   openModal('modal-edit-profile');
 };
- 
+
 window.triggerAvatarUpload = () => document.getElementById('avatar-upload').click();
-  
+
 window.uploadAvatar = async (input) => {
   const file = input.files[0];
   if (!file) return;
